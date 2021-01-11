@@ -3,8 +3,17 @@
  *
  *  Created on: Mar 26, 2020
  *  Author: Christopher Valerio
- *  
  * 
+ * 	This program accepts an encoded/compressed image file as input
+ *  I previously programmed the encoding/compression algorithm for such image files. This program accepts the resulting encoding previously generated
+ * 	and decodes/decompresses the file back to the image file originally provided
+ * 
+ * TO COMPILE: g++ -std=c++11 main.cpp
+ * 
+ * TO EXECUTE: ./a.exe "name of encoded image file"  
+ * -------
+ * ----EXAMPLE "   .\a.exe image1_EncodeMethod4.txt   "
+ * -------		
  */
 #include <iostream>
 #include <fstream>
@@ -30,12 +39,49 @@ class runLength
 	int length;
 
 public:
+	/**
+	 * Default constructor for objects of type runLength.
+	 * initializes class variables to default values of zero or empty string
+	*/
 	runLength();
+
+	/**
+	 * Parameterized constructor for objects of type runLength
+	 * parameters are specified in the header of the encoded/compressed image file
+	 * 
+	 * @param rows - integer representing number of rows in original image file
+	 * @param cols - integer representing number of columns in original image file
+	 * @param min - integer representing the smallest pixel value present in the image file
+	 * @param max - integer representing the greateset pixel value present in the image file
+	 * @param method - integer representing the Run Length Encoding method used to compress original image file
+	 * @param encodeFile - string value specifying name of the encoded file to be decoded. file name passed when program is executed
+	 * @param decodeFile - string value specifying name of file to output results of file decompresssion
+	*/
 	runLength(int rows, int cols, int min, int max, int method, string encodeFile, string decodeFile);
-	int leftEndPrint();
-	int rightEndPrint();
-	int distApart();
+
+	/**
+	 * 
+	 * This function accepts an encoded/compressed image file via method1 as input. 
+	 * encoded file specified as parameter is read and a runLength object is constructed with the information specified in header of encoded file
+	 * each pixel run encoding is parsed and reconstructed back to the contents of the original image file
+	 * 
+	 * @param encode - reference to input file stream used to read and decompress the encoded file provided
+	 * @param decode - reference to output file stream used to output results of file decompression 
+	*/
 	void deCodeMethod1(ifstream &encode, ofstream &decode);
+
+	/**
+	 * 
+	 * This function accepts an encoded/compressed image file via method4 as input. 
+	 * encoded file specified as parameter is read and a runLength object is constructed with the information specified in header of encoded file
+	 * each pixel run encoding is parsed and reconstructed back to the contents of the original image file.
+	 * 
+	 * This function is a little more complex than decodeMethod1(...) because Run Length Encoding method 4 implements file line wrap around
+	 * and so edges cases must be handled 
+	 * 
+	 * @param encode - reference to input file stream used to read and decompress the encoded file provided
+	 * @param decode - reference to output file stream used to output results of file decompression 
+	*/
 	void deCodeMethod4(ifstream &encode, ofstream &decode);
 };
 
@@ -43,7 +89,7 @@ public:
 int main(int argc, char *argv[])
 {
 
-	cout << argc << " " << argv[0] << " " << argv[1] << endl;
+	//cout << argc << " " << argv[0] << " " << argv[1] << endl;
 	string nameEncodeFile = argv[1];
 	ifstream encodeFile;
 	encodeFile.open(nameEncodeFile.c_str());
@@ -57,8 +103,8 @@ int main(int argc, char *argv[])
 	encodeFile >> min;
 	encodeFile >> max;
 	encodeFile >> method;
-	cout << rows << " " << cols << " " << min << " " << max << endl
-		 << method << endl;
+	//cout << rows << " " << cols << " " << min << " " << max << endl
+		// << method << endl;
 
 	string encode = nameEncodeFile;
 	nameEncodeFile = nameEncodeFile.substr(0, nameEncodeFile.find_first_of(".", 0));
@@ -66,17 +112,19 @@ int main(int argc, char *argv[])
 	ofstream decodeFile;
 	decodeFile.open(nameEncodeFile.c_str());
 	decodeFile << rows << " " << cols << " " << min << " " << max;
+
+	// creates and initializes new runLength object with values specified in the header of the encoded/compressed image file
 	runLength *code = new runLength(stoi(rows), stoi(cols), stoi(min), stoi(max), stoi(method), encode, nameEncodeFile);
 
 	switch (stoi(method))
 	{
 	case 1:
-		cout << "method1" << endl;
+		cout << "method1 encoding specified to be decoded" << endl;
 		code->deCodeMethod1(encodeFile, decodeFile);
 		break;
 
 	case 4:
-		cout << "method4" << endl;
+		cout << "method4 encoding specifed to be decoded" << endl;
 		code->deCodeMethod4(encodeFile, decodeFile);
 		break;
 
@@ -143,8 +191,8 @@ void runLength::deCodeMethod4(ifstream &encode, ofstream &decode)
 		preCol = curCol = stoi(startCol);
 		preVal = curVal = stoi(color);
 		preLen = curLen = stoi(length);
-		cout << startRow << "-" << startCol << "-" << color << "-" << length << endl;
-		cout.flush();
+		//cout << startRow << "-" << startCol << "-" << color << "-" << length << endl;
+		//cout.flush();
 
 		while (rowCnt < this->numRows /*&& !encode.eof()*/)
 		{
@@ -193,8 +241,8 @@ void runLength::deCodeMethod4(ifstream &encode, ofstream &decode)
 			curLen = stoi(length);
 			curRow = stoi(startRow);
 
-			cout << startRow << "-" << startCol << "-" << color << "-" << length << endl;
-			cout.flush();
+			//cout << startRow << "-" << startCol << "-" << color << "-" << length << endl;
+			//cout.flush();
 
 			preEnd = preCol;
 			preRowEnd = preRow;
@@ -211,14 +259,14 @@ void runLength::deCodeMethod4(ifstream &encode, ofstream &decode)
 					preRowEnd++;
 				}
 			}
-			cout << preVal << "_" << preRowEnd << "_" << preColEnd << endl;
-			cout.flush();
+			//cout << preVal << "_" << preRowEnd << "_" << preColEnd << endl;
+			//cout.flush();
 
 			int rowsApart = abs(curRow - preRowEnd);
 			int colsApart;
 			if (rowsApart == 0)
 			{
-				cout << "sameRow" << endl;
+				//cout << "sameRow" << endl;
 				colsApart = abs(preEnd - curCol);
 				for (int i = 0; i < colsApart - 1; i++)
 				{
@@ -297,15 +345,6 @@ void runLength::deCodeMethod4(ifstream &encode, ofstream &decode)
 			}
 		}
 	}
-}
-
-int runLength::leftEndPrint()
-{
-	return 0;
-}
-int runLength::rightEndPrint()
-{
-	return 0;
 }
 
 runLength::runLength(int rows, int cols, int min, int max, int method, string encodeFile, string decodeFile)
